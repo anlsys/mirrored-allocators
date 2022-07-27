@@ -41,7 +41,10 @@ LDADD = libmam.la
 # valgrind support
 @VALGRIND_CHECK_RULES@
 
-GENERAL_TESTS =
+mam_test_SOURCES = \
+		test/mam-test.c
+
+GENERAL_TESTS = mam-test
 
 # unit tests
 UNIT_TESTS = \
