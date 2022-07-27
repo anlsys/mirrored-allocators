@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libmam
+Description: Mirrored-Allocators
+Version: 0.1.0
+Libs: -L${libdir} -lmam
+Cflags: -I${includedir}
