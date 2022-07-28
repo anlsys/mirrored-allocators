@@ -21,7 +21,7 @@ mam_allocator_create(
 	MAM_CHECK_PTR(alloc2->free);
 
 	mam_error_t err = MAM_SUCCESS;
-	struct _mam_allocator_s *alloc = 
+	struct _mam_allocator_s *alloc =
 		calloc(1, sizeof(struct _mam_allocator_s));
 	MAM_REFUTE(!alloc, MAM_ENOMEM);
 	utarray_new(alloc->buffers, &_mam_buff_desc_icd);
@@ -51,10 +51,10 @@ mam_allocator_destroy(
 	MAM_CHECK_PTR(allocator);
 	UT_array *array = allocator->buffers;
 	mam_buff_desc_t **p_buffer = NULL;
-	if (allocator->current_buffer)
-		_mam_free_buffer(allocator, allocator->current_buffer);
 	while ( (p_buffer =  (mam_buff_desc_t **)utarray_next(array, p_buffer)) )
 		_mam_free_buffer(allocator, *p_buffer);
+	if (allocator->current_buffer)
+		_mam_free_buffer(allocator, allocator->current_buffer);
 	if (array)
 		utarray_free(array);
 	free(allocator);
@@ -82,8 +82,6 @@ _mam_allocate_buffer(
 	allocator->total_size += size;
 	*desc = new_desc;
 	return MAM_SUCCESS;
-err_m_addr:
-	allocator->alloc2.free(new_desc->m_addr);
 err_addr:
 	allocator->alloc1.free(new_desc->addr);
 err_desc:
@@ -100,8 +98,7 @@ _mam_find_in_buffer(
 		void            **mirror_addr) {
 	size_t mask = alignment - 1;
 	size_t offset = buffer->size - buffer->free;
-	/* assume alignment of buffers to be enough
-           so that required padding is similar in both */
+	/* pad for the target */
 	size_t pad = ((uintptr_t)buffer->m_addr + offset) & mask;
 	size_t sz = size;
 	if( pad ) {
@@ -112,8 +109,8 @@ _mam_find_in_buffer(
 	if ( buffer->free > sz ) {
 		buffer->free -= sz;
 		buffer->count += 1;
-		*addr = buffer->addr + offset;
-		*mirror_addr = buffer->m_addr + offset;
+		*addr = (char *)buffer->addr + offset;
+		*mirror_addr = (char *)buffer->m_addr + offset;
 		return true;
 	}
 	else
@@ -152,22 +149,20 @@ _mam_allocator_alloc(
 		void            **addr,
 		void            **mirror_addr,
 		mam_buff_desc_t **desc) {
-	mam_error_t err = MAM_SUCCESS;
 	mam_buff_desc_t *buffer = NULL;
-	/* find is an already allocated buffer can accomodate
+	/* find if the already allocated buffer can accomodate
            the allocation */
 	if (allocator->current_buffer) {
-		if (_mam_find_in_buffer(allocator->current_buffer, size, alignment, addr, mirror_addr))
+		if (_mam_find_in_buffer(allocator->current_buffer, size, alignment, addr, mirror_addr)) {
 			buffer = allocator->current_buffer;
-		else {
-			utarray_push_back(allocator->buffers, allocator->current_buffer);
-			allocator->current_buffer = NULL;
+			goto found;
 		}
+		/* buffer full, put in list */
+		utarray_push_back(allocator->buffers, &allocator->current_buffer);
+		allocator->current_buffer = NULL;
 	}
-	if (buffer)
-		goto found;
 	/* No buffer found, determine buffer alloc size:
-	   try eallocating existing size */
+	   try reallocating existing size */
 	size_t           buff_alloc_sz;
 	if (allocator->total_size)
 		buff_alloc_sz = allocator->total_size;
@@ -175,8 +170,7 @@ _mam_allocator_alloc(
 		buff_alloc_sz = MAM_ALLOC_SIZE_DEFAULT;
 	while (buff_alloc_sz < size)
 		buff_alloc_sz <<= 1;
-	MAM_VALIDATE(_mam_allocate_buffer(
-		allocator, buff_alloc_sz, &buffer));
+	MAM_VALIDATE(_mam_allocate_buffer(allocator, buff_alloc_sz, &buffer));
 	allocator->current_buffer = buffer;
 	_mam_find_in_buffer(buffer, size, alignment, addr, mirror_addr);
 found:
