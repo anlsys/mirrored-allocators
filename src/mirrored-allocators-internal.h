@@ -28,6 +28,10 @@
 #define MAM_CHECK_PTR(p) MAM_REFUTE(!(p), MAM_EINVAL)
 #define MAM_CHECK_ARY(c, a) MAM_REFUTE((c > 0) && !(a), MAM_EINVAL)
 
+#define MAM_RAISE(error) do { \
+	return error;         \
+} while (0)
+
 #define MAM_RAISE_ERR_GOTO(err, error, label) do { \
 	err = error;                               \
 	goto label;                                \
@@ -52,6 +56,7 @@ struct _mam_allocator_s {
 	size_t                total_size;
 	mam_platform_alloc_t  alloc1;
 	mam_platform_alloc_t  alloc2;
+	mam_buff_desc_t      *current_buffer;
 	UT_array             *buffers;
 };
 

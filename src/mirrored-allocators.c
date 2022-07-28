@@ -1,5 +1,6 @@
 #include "mirrored-allocators-internal.h"
 #include <stdint.h>
+#include <stdio.h>
 
 #undef  utarray_oom
 #define utarray_oom() { \
@@ -33,28 +34,33 @@ err_mem:
 	return err;
 }
 
+#undef  utarray_oom
+
+static inline void
+_mam_free_buffer(
+		mam_allocator_t  allocator,
+		mam_buff_desc_t *buffer) {
+	allocator->alloc1.free(buffer->addr);
+	allocator->alloc2.free(buffer->m_addr);
+	free(buffer);
+}
+
 mam_error_t
 mam_allocator_destroy(
 		mam_allocator_t allocator) {
 	MAM_CHECK_PTR(allocator);
 	UT_array *array = allocator->buffers;
 	mam_buff_desc_t **p_buffer = NULL;
-	while ( (p_buffer =  (mam_buff_desc_t **)utarray_next(array, p_buffer)) ) {
-		mam_buff_desc_t *buff = *p_buffer;
-		allocator->alloc1.free(buff->addr);
-		allocator->alloc2.free(buff->m_addr);
-		free(buff);
-	}
+	if (allocator->current_buffer)
+		_mam_free_buffer(allocator, allocator->current_buffer);
+	while ( (p_buffer =  (mam_buff_desc_t **)utarray_next(array, p_buffer)) )
+		_mam_free_buffer(allocator, *p_buffer);
 	if (array)
 		utarray_free(array);
 	free(allocator);
 	return MAM_SUCCESS;
 }
 
-#undef  utarray_oom
-#define utarray_oom() { \
-	MAM_RAISE_ERR_GOTO(err, MAM_ENOMEM, err_m_addr); \
-}
 
 static inline mam_error_t
 _mam_allocate_buffer(
@@ -72,7 +78,7 @@ _mam_allocate_buffer(
 	MAM_REFUTE_ERR_GOTO(err, !new_desc->m_addr, MAM_ENOMEM, err_addr);
 	new_desc->free = size;
 	new_desc->size = size;
-	utarray_push_back(allocator->buffers, &new_desc);
+	allocator->current_buffer = new_desc;
 	allocator->total_size += size;
 	*desc = new_desc;
 	return MAM_SUCCESS;
@@ -96,7 +102,7 @@ _mam_find_in_buffer(
 	size_t offset = buffer->size - buffer->free;
 	/* assume alignment of buffers to be enough
            so that required padding is similar in both */
-	size_t pad = ((uintptr_t)buffer->addr + offset) & mask;
+	size_t pad = ((uintptr_t)buffer->m_addr + offset) & mask;
 	size_t sz = size;
 	if( pad ) {
 		pad = alignment - pad;
@@ -114,6 +120,7 @@ _mam_find_in_buffer(
 		return false;
 }
 
+/*
 static inline mam_buff_desc_t *
 _mam_find_buffer(
 		mam_allocator_t   allocator,
@@ -131,6 +138,10 @@ _mam_find_buffer(
 			return buff;
 	}
 	return NULL;
+}*/
+
+#define utarray_oom() { \
+	MAM_RAISE(MAM_ENOMEM); \
 }
 
 mam_error_t
@@ -141,10 +152,18 @@ _mam_allocator_alloc(
 		void            **addr,
 		void            **mirror_addr,
 		mam_buff_desc_t **desc) {
+	mam_error_t err = MAM_SUCCESS;
 	mam_buff_desc_t *buffer = NULL;
 	/* find is an already allocated buffer can accomodate
            the allocation */
-	buffer = _mam_find_buffer(allocator, size, alignment, addr, mirror_addr);
+	if (allocator->current_buffer) {
+		if (_mam_find_in_buffer(allocator->current_buffer, size, alignment, addr, mirror_addr))
+			buffer = allocator->current_buffer;
+		else {
+			utarray_push_back(allocator->buffers, allocator->current_buffer);
+			allocator->current_buffer = NULL;
+		}
+	}
 	if (buffer)
 		goto found;
 	/* No buffer found, determine buffer alloc size:
@@ -158,12 +177,14 @@ _mam_allocator_alloc(
 		buff_alloc_sz <<= 1;
 	MAM_VALIDATE(_mam_allocate_buffer(
 		allocator, buff_alloc_sz, &buffer));
+	allocator->current_buffer = buffer;
 	_mam_find_in_buffer(buffer, size, alignment, addr, mirror_addr);
 found:
 	if (desc)
 		*desc = buffer;
 	return MAM_SUCCESS;
 }
+#undef  utarray_oom
 
 mam_error_t
 mam_allocator_alloc(
@@ -207,12 +228,17 @@ mam_allocator_get_buffer_descs(
 		size_t           *n_buff_ret) {
 	MAM_CHECK_PTR(allocator);
 	MAM_CHECK_ARY(n_buff, descs);
-	size_t count = utarray_len(allocator->buffers);
+	size_t len = utarray_len(allocator->buffers);
+	size_t count = len;
+	if (allocator->current_buffer)
+		count += 1;
 	if (descs) {
 		MAM_REFUTE(n_buff < count, MAM_EINVAL);
 		UT_array *array = allocator->buffers;
-		for (size_t i = 0; i < count; i++)
+		for (size_t i = 0; i < len; i++)
 			descs[i] = *(mam_buff_desc_t **)utarray_eltptr(array, i);
+		if (allocator->current_buffer)
+			descs[len] = allocator->current_buffer;
 		for (size_t i = count; i < n_buff; i++)
 			descs[i] = NULL;
 	}
