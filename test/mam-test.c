@@ -1,4 +1,4 @@
-#include <mirrored-allocators.h>
+#include <mam.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdint.h>

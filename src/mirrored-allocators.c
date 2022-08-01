@@ -1,3 +1,4 @@
+#include "mam-internal.h"
 #include "mirrored-allocators-internal.h"
 #include <stdint.h>
 #include <stdio.h>

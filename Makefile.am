@@ -5,7 +5,7 @@ AM_CPPFLAGS = \
 	      -I$(top_srcdir)/include \
 	      -I$(top_builddir)/include
 
-EXTRA_DIST = libmam.pc README.md LICENSE 
+EXTRA_DIST = libmam.pc README.md LICENSE
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libmam.pc
@@ -14,11 +14,14 @@ pkgconfig_DATA = libmam.pc
 # Includes
 ###############################################################################
 
-include_HEADERS = include/mirrored-allocators.h
+include_HEADERS = \
+		include/mam.h \
+		include/mam/mirrored-allocators.h
 
 noinst_HEADERS = \
-		 src/mirrored-allocators-internal.h \
-		 src/utarray.h 
+		src/mam-internal.h \
+		src/mirrored-allocators-internal.h \
+		src/utarray.h
 
 ###############################################################################
 # Includes
