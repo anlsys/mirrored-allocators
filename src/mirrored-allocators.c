@@ -102,12 +102,12 @@ _mam_find_in_buffer(
 	/* pad for the target */
 	size_t pad = ((uintptr_t)buffer->m_addr + offset) & mask;
 	size_t sz = size;
-	if( pad ) {
+	if (pad) {
 		pad = alignment - pad;
 		sz += pad;
 		offset += pad;
 	}
-	if ( buffer->free > sz ) {
+	if (buffer->free > sz) {
 		buffer->free -= sz;
 		buffer->count += 1;
 		*addr = (char *)buffer->addr + offset;

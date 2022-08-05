@@ -1,5 +1,5 @@
-#ifndef MIRRORED_ALLOCATORS_H
-#define MIRRORED_ALLOCATORS_H
+#ifndef MAM_MIRRORED_ALLOCATORS_H
+#define MAM_MIRRORED_ALLOCATORS_H
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -80,4 +80,4 @@ mam_allocator_get_buffer_descs(
 }
 #endif
 
-#endif //MIRRORED_ALLOCATORS_H
+#endif //MAM_MIRRORED_ALLOCATORS_H
