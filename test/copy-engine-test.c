@@ -262,13 +262,13 @@ void test_array() {
 
 	MAM_CHECK(mam_context_create_array(context, &field_type, &my_dynamic_array));
 	assert(my_dynamic_array);
-	MAM_CHECK(mam_array_get_field_type(my_static_array, &field_type_r));
+	MAM_CHECK(mam_array_get_field_type(my_dynamic_array, &field_type_r));
 	assert(field_type_r.type == MAM_MAPPED_TYPE_DOUBLE);
-	MAM_CHECK(mam_array_get_num_dimensions(my_static_array, &num_dimensions));
+	MAM_CHECK(mam_array_get_num_dimensions(my_dynamic_array, &num_dimensions));
 	assert(num_dimensions == 0);
-	MAM_CHECK(mam_array_get_size(my_static_array, &size));
+	MAM_CHECK(mam_array_get_size(my_dynamic_array, &size));
 	assert(size == 0);
-	MAM_CHECK(mam_array_get_align(my_static_array, &align));
+	MAM_CHECK(mam_array_get_align(my_dynamic_array, &align));
 	assert(align == 8);
 
 	dimension.type = MAM_DIMENSION_TYPE_FIXED;
@@ -284,16 +284,16 @@ void test_array() {
 	dimension.type = MAM_DIMENSION_TYPE_VARIABLE;
 	dimension.path = "//sz";
 	MAM_CHECK(mam_array_add_dimension(my_dynamic_array, &dimension));
-	MAM_CHECK(mam_array_get_num_dimensions(my_static_array, &num_dimensions));
+	MAM_CHECK(mam_array_get_num_dimensions(my_dynamic_array, &num_dimensions));
 	assert(num_dimensions == 2);
-	MAM_CHECK(mam_array_get_size(my_static_array, &size));
+	MAM_CHECK(mam_array_get_size(my_dynamic_array, &size));
 	assert(size == -1);
-	MAM_CHECK(mam_array_get_align(my_static_array, &align));
+	MAM_CHECK(mam_array_get_align(my_dynamic_array, &align));
 	assert(align == 8);
 
 	MAM_CHECK(mam_array_get_dimension(my_dynamic_array, 0, &dimension_r));
 	assert(dimension_r.type == MAM_DIMENSION_TYPE_FIXED);
-	assert(dimension_r.count == 3);
+	assert(dimension_r.count == 4);
 	MAM_CHECK(mam_array_get_dimension(my_dynamic_array, 1, &dimension_r));
 	assert(dimension_r.type == MAM_DIMENSION_TYPE_VARIABLE);
 	assert(!strcmp(dimension.path, "//sz"));
@@ -305,4 +305,5 @@ void test_array() {
 int main() {
 	test_define_context();
 	test_struct();
+	test_array();
 }
