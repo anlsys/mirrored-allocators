@@ -1,6 +1,7 @@
 #ifndef MAM_COPY_ENGINE
 #define MAM_COPY_ENGINE
 #include <stdint.h>
+#include <sys/types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -216,6 +217,26 @@ mam_context_create_array(
 	mam_field_type_t *field_type,
 	mam_array_t      *array_ret);
 
+extern mam_error_t
+mam_array_get_field_type(
+	mam_array_t      array,
+	mam_field_type_t *field_type_ret);
+
+extern mam_error_t
+mam_array_get_num_dimensions(
+	mam_array_t  array,
+	size_t      *num_dimension_ret);
+
+extern mam_error_t
+mam_array_get_size(
+	mam_array_t  array,
+	ssize_t     *size_ret);
+
+extern mam_error_t
+mam_array_get_align(
+	mam_array_t  array,
+	size_t      *align_ret);
+
 enum mam_dimension_type_e {
 	MAM_DIMENSION_TYPE_FIXED = 0,
 	MAM_DIMENSION_TYPE_VARIABLE,
@@ -237,7 +258,13 @@ extern mam_error_t
 mam_array_add_dimension(
 	mam_array_t      array,
 	mam_dimension_t *dimension);
-	
+
+extern mam_error_t
+mam_array_get_dimension(
+	mam_array_t      array,
+	size_t           index,
+	mam_dimension_t *dimension_ret);
+
 extern mam_error_t
 mam_context_create_variable(
 	mam_context_t     context,

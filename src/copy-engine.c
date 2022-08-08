@@ -584,6 +584,58 @@ err_mem:
 	return err;
 }
 
+mam_error_t
+mam_array_get_field_type(
+		mam_array_t      array,
+		mam_field_type_t *field_type_ret) {
+	MAM_CHECK_PTR(array);
+	MAM_CHECK_PTR(field_type_ret);
+	memcpy(field_type_ret, &array->field_type, sizeof(mam_field_type_t));
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_array_get_num_dimensions(
+		mam_array_t  array,
+		size_t      *num_dimension_ret) {
+	MAM_CHECK_PTR(array);
+	MAM_CHECK_PTR(num_dimension_ret);
+	*num_dimension_ret = utarray_len(array->dimensions);
+	return MAM_SUCCESS;
+}
+
+extern mam_error_t
+mam_array_get_dimension(
+		mam_array_t      array,
+		size_t           index,
+		mam_dimension_t *dimension_ret) {
+	MAM_CHECK_PTR(array);
+	MAM_CHECK_PTR(dimension_ret);
+	MAM_REFUTE(index >= utarray_len(array->dimensions), MAM_EINVAL);
+	memcpy(dimension_ret, *(mam_dimension_t **)utarray_eltptr(array->dimensions, index), sizeof(mam_dimension_t));
+	return MAM_SUCCESS;
+}
+
+extern mam_error_t
+mam_array_get_size(
+		mam_array_t  array,
+		ssize_t     *size_ret) {
+	MAM_CHECK_PTR(array);
+	MAM_CHECK_PTR(size_ret);
+	*size_ret = array->total_size;
+	return MAM_SUCCESS;
+}
+
+extern mam_error_t
+mam_array_get_align(
+		mam_array_t  array,
+		size_t      *align_ret) {
+	MAM_CHECK_PTR(array);
+	MAM_CHECK_PTR(align_ret);
+	*align_ret = array->alignment;
+	return MAM_SUCCESS;
+}
+
 #undef  utarray_oom
 #define utarray_oom() { \
         MAM_RAISE_ERR_GOTO(err, MAM_ENOMEM, err_mem); \
