@@ -56,6 +56,7 @@ enum mam_mapped_type_e {
 	MAM_MAPPED_TYPE_SIZE,
 	MAM_MAPPED_TYPE_SSIZE,
 	MAM_MAPPED_TYPE_POINTER,
+	MAM_MAPPED_TYPE_PTRDIFF,
 	MAM_MAPPED_TYPE_INTPTR,
 	MAM_MAPPED_TYPE_UINTPTR,
 	MAM_MAPPED_TYPE_HALF,
@@ -107,6 +108,14 @@ mam_platform_create(
 	mam_platform_t *platform_ret);
 
 extern mam_error_t
+mam_platform_create_host(
+	mam_platform_t *platform_ret);
+
+extern mam_error_t
+mam_platform_destroy(
+	mam_platform_t platform);
+
+extern mam_error_t
 mam_context_create(
 	const char     *name,
 	mam_platform_t  platform,
@@ -125,14 +134,14 @@ enum mam_construct_type_e {
 typedef enum mam_construct_type_e mam_construct_type_t;
 
 extern mam_error_t
-mam_context_struct_create(
+mam_context_create_struct(
 	mam_context_t    context,
 	const char      *name,
 	bool             packed,
 	mam_construct_t *construct_ret);
 
 extern mam_error_t
-mam_context_union_create(
+mam_context_create_union(
 	mam_context_t    context,
 	const char      *name,
 	bool             packed,

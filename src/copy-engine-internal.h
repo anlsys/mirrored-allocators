@@ -30,7 +30,6 @@ static const UT_icd _mam_dimension_icd = {
 	NULL
 };
 
-// TODO: add mechanism to freeze array once they are embeded in another array or constructs
 struct _mam_array_s {
 	mam_context_t     context;
 	ssize_t           elem_size;
@@ -38,6 +37,7 @@ struct _mam_array_s {
 	size_t            alignment;
 	mam_field_type_t  field_type;
 	UT_array         *dimensions;
+	bool              frozen;
 };
 
 static const UT_icd _mam_field_icd = {
@@ -47,7 +47,6 @@ static const UT_icd _mam_field_icd = {
 	NULL
 };
 
-// TODO: add mechanism to freeze constructs once they are embeded in another construct or array
 struct _mam_construct_s {
 	mam_context_t         context;
 	const char           *name;
@@ -58,6 +57,7 @@ struct _mam_construct_s {
 	size_t                alignment;
 	UT_array             *fields;
 	_mam_field_t         *fields_name_hash;
+	bool                  frozen;
 };
 
 struct _mam_platform_s {

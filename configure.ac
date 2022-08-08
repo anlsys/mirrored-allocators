@@ -2,7 +2,7 @@
 ######
 
 AC_INIT([libmam],[0.1.0],[bvideau@anl.gov])
-AC_CONFIG_SRCDIR([include/mirrored-allocators.h])
+AC_CONFIG_SRCDIR([include/mam.h])
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
 

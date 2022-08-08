@@ -11,7 +11,8 @@ extern "C" {
 enum mam_error_e {
 	MAM_SUCCESS =  0,
 	MAM_EINVAL  = -1,
-	MAM_ENOMEM  = -2
+	MAM_ENOMEM  = -2,
+	MAM_EFROZEN = -3
 };
 typedef enum mam_error_e mam_error_t;
 

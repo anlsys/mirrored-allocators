@@ -50,7 +50,12 @@ LDADD = libmam.la
 mam_test_SOURCES = \
 		test/mam-test.c
 
-GENERAL_TESTS = mam-test
+copy_engine_test_SOURCES = \
+		test/copy-engine-test.c
+
+GENERAL_TESTS = \
+		mam-test \
+		copy-engine-test
 
 # unit tests
 UNIT_TESTS = \

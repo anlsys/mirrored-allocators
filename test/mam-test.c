@@ -62,7 +62,7 @@ void test_alloc() {
 		malloc,
 		free
 	};
-	size_t           n_buffs, sz, size, size2;
+	size_t           sz, size;
 	mam_buff_desc_t *desc, *desc2;
 	void            *addr, *m_addr, *addr2, *m_addr2;
 
@@ -79,8 +79,8 @@ void test_alloc() {
 	memset( m_addr2, 0, sz );
 	assert( desc == desc2 );
 	assert( desc->size - desc->free == 2 * sz );
-	assert( (intptr_t)addr2 - (intptr_t)addr == sz );
-	assert( (intptr_t)m_addr2 - (intptr_t)m_addr == sz );
+	assert( (uintptr_t)addr2 - (uintptr_t)addr == sz );
+	assert( (uintptr_t)m_addr2 - (uintptr_t)m_addr == sz );
 
 	size = sz;
 	addr = addr2;
@@ -95,8 +95,8 @@ void test_alloc() {
 		memset( m_addr2, 0, sz );
 		assert( 0 == (intptr_t)m_addr2 % align );
 		if (desc == desc2) {
-			assert( (intptr_t)addr2 - (intptr_t)addr >= size );
-			assert( (intptr_t)m_addr2 - (intptr_t)m_addr >= size );
+			assert( (uintptr_t)addr2 - (uintptr_t)addr >= size );
+			assert( (uintptr_t)m_addr2 - (uintptr_t)m_addr >= size );
 		}
 		size = sz;
 		addr = addr2;
