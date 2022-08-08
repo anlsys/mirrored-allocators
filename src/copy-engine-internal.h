@@ -70,6 +70,8 @@ struct _mam_platform_s {
 struct _mam_variable_s {
 	mam_context_t      context;
 	const char        *name;
+	size_t             alignment;
+	ssize_t            size;
 	mam_field_type_t   field_type;
 };
 

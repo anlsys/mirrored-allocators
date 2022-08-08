@@ -287,6 +287,16 @@ mam_variable_get_name(
 	mam_variable_t   variable,
 	const char     **name_ret);
 
+extern mam_error_t
+mam_variable_get_size(
+	mam_variable_t  variable,
+	ssize_t        *size_ret);
+
+extern mam_error_t
+mam_variable_get_align(
+	mam_variable_t  variable,
+	size_t         *align_ret);
+
 #ifdef __cplusplus
 }
 #endif

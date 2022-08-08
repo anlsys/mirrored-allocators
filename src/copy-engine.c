@@ -703,6 +703,10 @@ mam_context_create_variable(
 	MAM_CHECK_PTR(variable_ret);
 	size_t sz_name = strlen(name);
 	MAM_REFUTE(!sz_name, MAM_EINVAL);
+	ssize_t size;
+	size_t align;
+	MAM_VALIDATE(_mam_get_field_type_size_align(
+		context->platform, field_type, &size, &align));
 
 	mam_error_t err = MAM_SUCCESS;
 	mam_variable_t variable = (struct _mam_variable_s *)
@@ -713,6 +717,8 @@ mam_context_create_variable(
 	strcpy(p_name, name);
 	variable->context = context;
 	variable->name = p_name;
+	variable->alignment = align;
+	variable->size = size;
 	memcpy(&variable->field_type, field_type, sizeof(mam_field_type_t));
 	*variable_ret = variable;
 	return MAM_SUCCESS;
@@ -731,13 +737,33 @@ mam_variable_get_field_type(
 	return MAM_SUCCESS;
 }
 
-extern mam_error_t
+mam_error_t
 mam_variable_get_name(
 		mam_variable_t   variable,
 		const char     **name_ret) {
 	MAM_CHECK_PTR(variable);
 	MAM_CHECK_PTR(name_ret);
 	*name_ret = variable->name;
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_variable_get_size(
+	mam_variable_t  variable,
+	ssize_t        *size_ret) {
+	MAM_CHECK_PTR(variable);
+	MAM_CHECK_PTR(size_ret);
+	*size_ret = variable->size;
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_variable_get_align(
+	mam_variable_t  variable,
+	size_t         *align_ret) {
+	MAM_CHECK_PTR(variable);
+	MAM_CHECK_PTR(align_ret);
+	*align_ret = variable->alignment;
 	return MAM_SUCCESS;
 }
 
