@@ -720,6 +720,7 @@ mam_context_create_variable(
 	variable->alignment = align;
 	variable->size = size;
 	memcpy(&variable->field_type, field_type, sizeof(mam_field_type_t));
+	_mam_freeze_field_type(field_type);
 	*variable_ret = variable;
 	return MAM_SUCCESS;
 err_mem:
