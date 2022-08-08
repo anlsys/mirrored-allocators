@@ -283,6 +283,72 @@ mam_construct_get_type(
 }
 
 mam_error_t
+mam_construct_get_name(
+		mam_construct_t   construct,
+		const char      **name_ret) {
+	MAM_CHECK_PTR(construct);
+	MAM_CHECK_PTR(name_ret);
+	*name_ret = construct->name;
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_construct_get_field_count(
+		mam_construct_t  construct,
+		size_t          *field_count_ret) {
+	MAM_CHECK_PTR(construct);
+	MAM_CHECK_PTR(field_count_ret);
+	*field_count_ret = utarray_len(construct->fields);
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_construct_get_field(
+		mam_construct_t    construct,
+		size_t             index,
+		const char       **name_ret,
+		size_t            *offset_ret,
+		size_t            *size_ret,
+		mam_field_type_t  *field_type_ret) {
+	MAM_CHECK_PTR(construct);
+	MAM_REFUTE(index >= utarray_len(construct->fields), MAM_EINVAL);
+	MAM_CHECK_PTR(name_ret);
+	MAM_CHECK_PTR(offset_ret);
+	MAM_CHECK_PTR(size_ret);
+	MAM_CHECK_PTR(field_type_ret);
+	struct _mam_field_s **p = (struct _mam_field_s **)utarray_eltptr(construct->fields, index);
+	*name_ret = (*p)->name;
+	*offset_ret = (*p)->offset;
+	*size_ret = (*p)->size;
+	memcpy(field_type_ret, &(*p)->field_type, sizeof(mam_field_type_t));
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_construct_get_field_by_name(
+		mam_construct_t   construct,
+		const char       *name,
+		size_t           *offset_ret,
+		size_t           *size_ret,
+		mam_field_type_t *field_type_ret) {
+	MAM_CHECK_PTR(construct);
+	MAM_CHECK_PTR(name);
+	MAM_CHECK_PTR(offset_ret);
+	MAM_CHECK_PTR(size_ret);
+	MAM_CHECK_PTR(field_type_ret);
+	size_t sz_name = strlen(name);
+	MAM_REFUTE(!sz_name, MAM_EINVAL);
+	struct _mam_field_s *field = NULL;
+	HASH_FIND(hh_name, construct->fields_name_hash,
+		name, sz_name, field);
+	MAM_REFUTE(!field, MAM_EINVAL);
+	*offset_ret = field->offset;
+	*size_ret = field->size;
+	memcpy(field_type_ret, &field->field_type, sizeof(mam_field_type_t));
+	return MAM_SUCCESS;
+}
+
+mam_error_t
 mam_construct_get_size(
 		mam_construct_t  construct,
 		size_t          *size_ret) {
@@ -313,7 +379,7 @@ _mam_get_field_type_size_align(
 		type = platform->type_map[type - MAM_MAPPED_TYPE_CHAR];
 	switch (type) {
 	case MAM_COMPLEX_TYPE_STRUCT:
-	case MAM_CONPLEX_TYPE_UNION:
+	case MAM_COMPLEX_TYPE_UNION:
 	{
 		mam_construct_t construct = field_type->construct;
 		*size_ret = construct->total_size;
@@ -340,7 +406,7 @@ _mam_freeze_field_type(
 	int32_t type = field_type->type;
 	switch (type) {
 	case MAM_COMPLEX_TYPE_STRUCT:
-	case MAM_CONPLEX_TYPE_UNION:
+	case MAM_COMPLEX_TYPE_UNION:
 		field_type->construct->frozen = true;
 		break;
 	case MAM_COMPLEX_TYPE_ARRAY:
@@ -424,6 +490,7 @@ mam_construct_add_field(
 		}
 	}
 	field->offset = offset;
+	field->size = size;
 
 	if (!construct->packed)
 		construct->alignment = align > construct->alignment ? align : construct->alignment;
@@ -648,5 +715,3 @@ mam_context_destroy(
 	free(context);
 	return MAM_SUCCESS;
 }
-
-

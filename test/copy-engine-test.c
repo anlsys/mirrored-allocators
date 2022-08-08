@@ -11,7 +11,7 @@
 
 #define MAM_CHECK(cmd) MAM_CHECK_ERROR(cmd, MAM_SUCCESS)
 
-void test_create() {
+void test_define_context() {
 	mam_platform_t   platform;
 	mam_context_t    context;
 	mam_construct_t  my_union, my_struct;
@@ -20,7 +20,6 @@ void test_create() {
 	mam_variable_t   variable_sz;
 	mam_field_type_t field_type;
 	mam_dimension_t  dimension;
-	size_t           size, align;
 
 	MAM_CHECK(mam_platform_create_host(&platform));
 	assert(platform);
@@ -43,7 +42,7 @@ void test_create() {
 	field_type.type = MAM_MAPPED_TYPE_INT;
 	MAM_CHECK(mam_construct_add_field(my_union, "i", &field_type, MAM_FIELD_OPTION_END));
 
-	MAM_CHECK(mam_context_create_struct(context, "my_sytuct_s", false, &my_struct));
+	MAM_CHECK(mam_context_create_struct(context, "my_struct_s", false, &my_struct));
 	assert(my_struct);
 	field_type.type = MAM_COMPLEX_TYPE_STRUCT;
 	field_type.construct = my_struct;
@@ -52,7 +51,7 @@ void test_create() {
 
 	field_type.type = MAM_MAPPED_TYPE_FLOAT;
 	MAM_CHECK(mam_construct_add_field(my_struct, "f", &field_type, MAM_FIELD_OPTION_END));
-	field_type.type = MAM_CONPLEX_TYPE_UNION;
+	field_type.type = MAM_COMPLEX_TYPE_UNION;
 	field_type.construct = my_union;
 	MAM_CHECK(mam_construct_add_field(my_struct, "u", &field_type, MAM_FIELD_OPTION_END));
 	field_type.type = MAM_MAPPED_TYPE_POINTER;
@@ -78,6 +77,137 @@ void test_create() {
 	MAM_CHECK(mam_platform_destroy(platform));
 }
 
+void test_struct() {
+	mam_platform_t        platform;
+	mam_context_t         context;
+	mam_construct_t       my_struct, my_union;
+	mam_array_t           my_array;
+	size_t                size, align, offset, field_count;
+	mam_field_type_t      field_type, field_type_r;
+	mam_construct_type_t  construct_type;
+	const char           *name;
+	mam_dimension_t       dimension;
+
+	MAM_CHECK(mam_platform_create_host(&platform));
+	assert(platform);
+	MAM_CHECK(mam_context_create("ctx", platform, &context));
+	assert(context);
+
+	MAM_CHECK(mam_context_create_struct(context, "my_struct_s", false, &my_struct));
+	assert(my_struct);
+	MAM_CHECK(mam_construct_get_type(my_struct, &construct_type));
+	assert(construct_type == MAM_CONSTRUCT_TYPE_STRUCT);
+	MAM_CHECK(mam_construct_get_name(my_struct, &name));
+	assert(!strcmp(name, "my_struct_s"));
+	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
+	assert(field_count == 0);
+	MAM_CHECK(mam_construct_get_size(my_struct, &size));
+	assert(size == 0);
+	MAM_CHECK(mam_construct_get_align(my_struct, &align));
+	assert(align == 1);
+
+	field_type.type = MAM_MAPPED_TYPE_HALF;
+	MAM_CHECK(mam_construct_add_field(my_struct, "h", &field_type, MAM_FIELD_OPTION_END));
+	MAM_CHECK(mam_construct_get_size(my_struct, &size));
+	assert(size == 2);
+	MAM_CHECK(mam_construct_get_align(my_struct, &align));
+	assert(align == 2);
+	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
+	assert(field_count == 1);
+	MAM_CHECK(mam_construct_get_field(my_struct, field_count - 1, &name, &offset, &size, &field_type_r));
+	assert(!strcmp(name, "h"));
+	assert(offset == 0);
+	assert(size == 2);
+	assert(field_type_r.type == MAM_MAPPED_TYPE_HALF);
+
+	field_type.type = MAM_MAPPED_TYPE_FLOAT;
+	MAM_CHECK(mam_construct_add_field(my_struct, "f", &field_type, MAM_FIELD_OPTION_END));
+	MAM_CHECK(mam_construct_get_size(my_struct, &size));
+	assert(size == 8);
+	MAM_CHECK(mam_construct_get_align(my_struct, &align));
+	assert(align == 4);
+	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
+	assert(field_count == 2);
+	MAM_CHECK(mam_construct_get_field(my_struct, field_count - 1, &name, &offset, &size, &field_type_r));
+	assert(!strcmp(name, "f"));
+	assert(offset == 4);
+	assert(size == 4);
+	assert(field_type_r.type == MAM_MAPPED_TYPE_FLOAT);
+
+	MAM_CHECK(mam_context_create_union(context, "my_union_u", false, &my_union));
+	assert(my_union);
+	field_type.type = MAM_MAPPED_TYPE_DOUBLE;
+	MAM_CHECK(mam_construct_add_field(my_union, "d", &field_type, MAM_FIELD_OPTION_END));
+	field_type.type = MAM_MAPPED_TYPE_INT;
+	MAM_CHECK(mam_construct_add_field(my_union, "i", &field_type, MAM_FIELD_OPTION_END));
+	field_type.type = MAM_COMPLEX_TYPE_UNION;
+	field_type.construct = my_union;
+	MAM_CHECK(mam_construct_add_field(my_struct, "u", &field_type, MAM_FIELD_OPTION_END));
+	MAM_CHECK(mam_construct_get_size(my_struct, &size));
+	assert(size == 16);
+	MAM_CHECK(mam_construct_get_align(my_struct, &align));
+	assert(align == 8);
+	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
+	assert(field_count == 3);
+	MAM_CHECK(mam_construct_get_field(my_struct, field_count - 1, &name, &offset, &size, &field_type_r));
+	assert(!strcmp(name, "u"));
+	assert(offset == 8);
+	assert(size == 8);
+	assert(field_type_r.type == MAM_COMPLEX_TYPE_UNION);
+	assert(field_type_r.construct == my_union);
+
+	field_type.type = MAM_MAPPED_TYPE_FLOAT;
+	MAM_CHECK(mam_context_create_array(context, &field_type, &my_array));
+	assert(my_array);
+	dimension.type = MAM_DIMENSION_TYPE_FIXED;
+	dimension.count = 3;
+	MAM_CHECK(mam_array_add_dimension(my_array, &dimension));
+	dimension.count = 15;
+	MAM_CHECK(mam_array_add_dimension(my_array, &dimension));
+	field_type.type = MAM_COMPLEX_TYPE_ARRAY;
+	field_type.array = my_array;
+	MAM_CHECK(mam_construct_add_field(my_struct, "a", &field_type, MAM_FIELD_OPTION_END));
+	MAM_CHECK(mam_construct_get_size(my_struct, &size));
+	assert(size == 200);
+	MAM_CHECK(mam_construct_get_align(my_struct, &align));
+	assert(align == 8);
+	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
+	assert(field_count == 4);
+	MAM_CHECK(mam_construct_get_field(my_struct, field_count - 1, &name, &offset, &size, &field_type_r));
+	assert(!strcmp(name, "a"));
+	assert(offset == 16);
+	assert(size == 180);
+	assert(field_type_r.type == MAM_COMPLEX_TYPE_ARRAY);
+	assert(field_type_r.array == my_array);
+
+
+	MAM_CHECK(mam_construct_get_field_by_name(my_struct, "h", &offset, &size, &field_type_r));
+	assert(offset == 0);
+	assert(size == 2);
+	assert(field_type_r.type == MAM_MAPPED_TYPE_HALF);
+
+	MAM_CHECK(mam_construct_get_field_by_name(my_struct, "a", &offset, &size, &field_type_r));
+	assert(offset == 16);
+	assert(size == 180);
+	assert(field_type_r.type == MAM_COMPLEX_TYPE_ARRAY);
+	assert(field_type_r.array == my_array);
+
+	MAM_CHECK(mam_construct_get_field_by_name(my_struct, "f", &offset, &size, &field_type_r));
+	assert(offset == 4);
+	assert(size == 4);
+	assert(field_type_r.type == MAM_MAPPED_TYPE_FLOAT);
+
+	MAM_CHECK(mam_construct_get_field_by_name(my_struct, "u", &offset, &size, &field_type_r));
+	assert(offset == 8);
+	assert(size == 8);
+	assert(field_type_r.type == MAM_COMPLEX_TYPE_UNION);
+	assert(field_type_r.construct == my_union);
+
+	MAM_CHECK(mam_context_destroy(context));
+	MAM_CHECK(mam_platform_destroy(platform));
+}
+
 int main() {
-	test_create();
+	test_define_context();
+	test_struct();
 }

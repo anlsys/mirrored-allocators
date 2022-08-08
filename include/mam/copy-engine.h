@@ -36,7 +36,7 @@ typedef enum mam_data_type_e mam_data_type_t;
 
 enum mam_complex_type_e {
 	MAM_COMPLEX_TYPE_STRUCT = 0x100,
-	MAM_CONPLEX_TYPE_UNION,
+	MAM_COMPLEX_TYPE_UNION,
 	MAM_COMPLEX_TYPE_ARRAY,
 	MAM_COMPLEX_TYPE_MAX,
 	MAM_COMPLEX_TYPE_FORCE_32BIT = INT32_MAX
@@ -161,6 +161,33 @@ extern mam_error_t
 mam_construct_get_align(
 	mam_construct_t  construct,
 	size_t          *align_ret);
+
+extern mam_error_t
+mam_construct_get_name(
+	mam_construct_t   construct,
+	const char      **name_ret);
+
+extern mam_error_t
+mam_construct_get_field_count(
+	mam_construct_t  construct,
+	size_t          *field_count_ret);
+
+extern mam_error_t
+mam_construct_get_field(
+	mam_construct_t    construct,
+	size_t             index,
+	const char       **name_ret,
+	size_t            *offset_ret,
+	size_t            *size_ret,
+	mam_field_type_t  *field_type_ret);
+
+extern mam_error_t
+mam_construct_get_field_by_name(
+	mam_construct_t   construct,
+	const char       *name,
+	size_t           *offset_ret,
+	size_t           *size_ret,
+	mam_field_type_t *field_type_ret);
 
 enum mam_field_option_e {
 	MAM_FIELD_OPTION_END = 0,

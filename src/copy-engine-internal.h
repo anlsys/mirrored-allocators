@@ -13,6 +13,7 @@
 struct _mam_field_s {
 	const char        *name;
 	size_t             offset;
+	size_t             size;
 	mam_field_type_t   field_type;
 	UT_hash_handle     hh_name;
 };
