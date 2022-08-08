@@ -212,6 +212,11 @@ mam_context_create_pointer(
 	mam_pointer_t    *pointer_ret);
 
 extern mam_error_t
+mam_pointer_get_field_type(
+	mam_pointer_t     pointer,
+	mam_field_type_t *field_type_ret);
+
+extern mam_error_t
 mam_context_create_array(
 	mam_context_t     context,
 	mam_field_type_t *field_type,
@@ -271,6 +276,16 @@ mam_context_create_variable(
 	const char       *name,
 	mam_field_type_t *field_type,
 	mam_variable_t   *variable_ret);
+
+extern mam_error_t
+mam_variable_get_field_type(
+	mam_variable_t    variable,
+	mam_field_type_t *field_type_ret);
+
+extern mam_error_t
+mam_variable_get_name(
+	mam_variable_t   variable,
+	const char     **name_ret);
 
 #ifdef __cplusplus
 }

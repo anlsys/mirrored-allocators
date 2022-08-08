@@ -541,6 +541,16 @@ err_mem:
 	return err;
 }
 
+mam_error_t
+mam_pointer_get_field_type(
+		mam_pointer_t     pointer,
+		mam_field_type_t *field_type_ret) {
+	MAM_CHECK_PTR(pointer);
+	MAM_CHECK_PTR(field_type_ret);
+	memcpy(field_type_ret, &pointer->field_type, sizeof(mam_field_type_t));
+	return MAM_SUCCESS;
+}
+
 #undef  utarray_oom
 #define utarray_oom() { \
         MAM_RAISE_ERR_GOTO(err, MAM_ENOMEM, err_mem); \
@@ -709,6 +719,26 @@ mam_context_create_variable(
 err_mem:
 	free(variable);
 	return err;
+}
+
+mam_error_t
+mam_variable_get_field_type(
+		mam_variable_t    variable,
+		mam_field_type_t *field_type_ret) {
+	MAM_CHECK_PTR(variable);
+	MAM_CHECK_PTR(field_type_ret);
+	memcpy(field_type_ret, &variable->field_type, sizeof(mam_field_type_t));
+	return MAM_SUCCESS;
+}
+
+extern mam_error_t
+mam_variable_get_name(
+		mam_variable_t   variable,
+		const char     **name_ret) {
+	MAM_CHECK_PTR(variable);
+	MAM_CHECK_PTR(name_ret);
+	*name_ret = variable->name;
+	return MAM_SUCCESS;
 }
 
 static inline mam_error_t
