@@ -660,26 +660,48 @@ mam_array_add_dimension(
 	//TODO: should validate dimension content here
 
 	mam_error_t err = MAM_SUCCESS;
-	mam_dimension_t *p_dimension = (mam_dimension_t *)
-		calloc(1, sizeof(mam_dimension_t) +
-			(dimension->type == MAM_DIMENSION_TYPE_VARIABLE ?
-				strlen(dimension->path) + 1 : 0));
+	size_t sz = sizeof(mam_dimension_t);
+	sz += dimension->type == MAM_DIMENSION_TYPE_VARIABLE ?
+		strlen(dimension->path) + 1 : 0;
+	sz += dimension->padded && dimension->pad.type == MAM_DIMENSION_TYPE_VARIABLE ?
+		strlen(dimension->pad.path) + 1 : 0;
+	mam_dimension_t *p_dimension = (mam_dimension_t *)calloc(1, sz);
 	MAM_REFUTE(!p_dimension, MAM_ENOMEM);
+	memcpy(p_dimension, dimension, sizeof(mam_dimension_t));
 	utarray_push_back(array->dimensions, &p_dimension);
-	
-	p_dimension->type = dimension->type;
+	char *mem = (char *)p_dimension + sizeof(mam_dimension_t);
 	if (dimension->type == MAM_DIMENSION_TYPE_VARIABLE) {
-		char *p_path = (char *)p_dimension + sizeof(mam_dimension_t);
+		char *p_path = mem;
 		strcpy(p_path, dimension->path);
 		p_dimension->path = p_path;
-		array->total_size = -1;
-	} else {
-		p_dimension->count = dimension->count;
-		if (array->total_size == 0 && array->elem_size >= 0)
-			array->total_size = array->elem_size * dimension->count;
-		else if (array->total_size > 0)
-			array->total_size *= dimension->count;
+		mem += strlen(dimension->path) + 1;
 	}
+	if (dimension->padded && dimension->pad.type == MAM_DIMENSION_TYPE_VARIABLE) {
+		char *p_path = mem;
+		strcpy(p_path, dimension->pad.path);
+		p_dimension->pad.path = p_path;
+	}
+
+	mam_dimension_type_t type;
+	size_t               count;
+	if (dimension->padded) {
+		type = dimension->pad.type;
+		if (type == MAM_DIMENSION_TYPE_FIXED)
+			count = dimension->pad.count;
+	} else {
+		type = dimension->type;
+		if (type == MAM_DIMENSION_TYPE_FIXED)
+			count = dimension->count;
+	}
+
+	if (type == MAM_DIMENSION_TYPE_FIXED) {
+		if (array->total_size == 0 && array->elem_size >= 0)
+			array->total_size = array->elem_size * count;
+		else if (array->total_size > 0)
+			array->total_size *= count;
+	} else
+		array->total_size = -1;
+
 	return MAM_SUCCESS;
 err_mem:
 	free(p_dimension);

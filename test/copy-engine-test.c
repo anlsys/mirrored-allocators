@@ -30,6 +30,7 @@ void test_define_context() {
 	MAM_CHECK(mam_context_create_array(context, &field_type, &my_static_array));
 	assert(my_static_array);
 	dimension.type = MAM_DIMENSION_TYPE_FIXED;
+	dimension.padded = false;
 	dimension.count = 3;
 	MAM_CHECK(mam_array_add_dimension(my_static_array, &dimension));
 	dimension.count = 15;
@@ -160,6 +161,7 @@ void test_struct() {
 	MAM_CHECK(mam_context_create_array(context, &field_type, &my_array));
 	assert(my_array);
 	dimension.type = MAM_DIMENSION_TYPE_FIXED;
+	dimension.padded = false;
 	dimension.count = 3;
 	MAM_CHECK(mam_array_add_dimension(my_array, &dimension));
 	dimension.count = 15;
@@ -234,6 +236,7 @@ void test_array() {
 	assert(align == 8);
 
 	dimension.type = MAM_DIMENSION_TYPE_FIXED;
+	dimension.padded = false;
 	dimension.count = 3;
 	MAM_CHECK(mam_array_add_dimension(my_static_array, &dimension));
 	MAM_CHECK(mam_array_get_num_dimensions(my_static_array, &num_dimensions));

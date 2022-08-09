@@ -251,11 +251,19 @@ enum mam_dimension_type_e {
 typedef enum mam_dimension_type_e mam_dimension_type_t;
 
 struct mam_dimension_s {
-	mam_dimension_type_t type;
+	mam_dimension_type_t  type;
+	bool                  padded;
 	union {
-		size_t      count;
-		const char *path;
+		size_t        count;
+		const char   *path;
 	};
+	struct {
+		mam_dimension_type_t  type;
+		union {
+			size_t        count;
+			const char   *path;
+		};
+	} pad;
 };
 typedef struct mam_dimension_s mam_dimension_t;
 
