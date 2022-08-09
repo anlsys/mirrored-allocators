@@ -305,8 +305,61 @@ void test_array() {
 	MAM_CHECK(mam_platform_destroy(platform));
 }
 
+void test_pointer() {
+	mam_platform_t   platform;
+	mam_context_t    context;
+	mam_pointer_t    my_pointer;
+	mam_field_type_t field_type, field_type_r;
+
+	MAM_CHECK(mam_platform_create_host(&platform));
+	assert(platform);
+	MAM_CHECK(mam_context_create("ctx", platform, &context));
+	assert(context);
+
+	field_type.type = MAM_DATA_TYPE_UINT32;
+	MAM_CHECK(mam_context_create_pointer(context, &field_type, &my_pointer));
+	assert(my_pointer);
+	MAM_CHECK(mam_pointer_get_field_type(my_pointer, &field_type_r));
+	assert(field_type_r.type == MAM_DATA_TYPE_UINT32);
+
+	MAM_CHECK(mam_context_destroy(context));
+	MAM_CHECK(mam_platform_destroy(platform));
+}
+
+void test_variable() {
+	mam_platform_t    platform;
+	mam_context_t     context;
+	mam_variable_t    my_variable;
+	mam_field_type_t  field_type, field_type_r;
+	ssize_t           size;
+	size_t            align;
+	const char       *name;
+
+	MAM_CHECK(mam_platform_create_host(&platform));
+	assert(platform);
+	MAM_CHECK(mam_context_create("ctx", platform, &context));
+	assert(context);
+
+	field_type.type = MAM_MAPPED_TYPE_SIZE;
+	MAM_CHECK(mam_context_create_variable(context, "sz", &field_type, &my_variable));
+	assert(my_variable);
+
+	MAM_CHECK(mam_variable_get_name(my_variable, &name));
+	assert(!strcmp(name, "sz"));
+	MAM_CHECK(mam_variable_get_field_type(my_variable, &field_type_r));
+	assert(field_type_r.type == MAM_MAPPED_TYPE_SIZE);
+	MAM_CHECK(mam_variable_get_size(my_variable, &size));
+	assert(size == sizeof(size_t));
+	MAM_CHECK(mam_variable_get_align(my_variable, &align));
+	assert(align == sizeof(size_t));
+
+	MAM_CHECK(mam_context_destroy(context));
+	MAM_CHECK(mam_platform_destroy(platform));
+}
+
 int main() {
 	test_define_context();
 	test_struct();
 	test_array();
+	test_pointer();
 }
