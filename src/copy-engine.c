@@ -216,7 +216,10 @@ err_mem:
 #define utarray_oom() { \
         MAM_RAISE_ERR_GOTO(err, MAM_ENOMEM, err_mem); \
 }
-
+#undef uthash_nonfatal_oom
+#define uthash_nonfatal_oom(elt) { \
+	MAM_RAISE_ERR_GOTO(err, MAM_ENOMEM, err_arr); \
+}
 static inline mam_error_t
 _mam_context_create_construct(
 		mam_context_t         context,
@@ -227,10 +230,17 @@ _mam_context_create_construct(
 	MAM_CHECK_PTR(context);
 	MAM_CHECK_PTR(name);
 	MAM_CHECK_PTR(construct_ret);
+	mam_construct_t construct = NULL;
+	size_t sz_name = strlen(name);
+	if (strlen(name)>0) {
+		HASH_FIND(hh_name, context->constructs_name_hash,
+			name, sz_name, construct);
+		MAM_REFUTE(construct, MAM_EINVAL);
+	}
 
 	mam_error_t err = MAM_SUCCESS;
-	struct _mam_construct_s *construct = (struct _mam_construct_s *)
-		calloc(1, sizeof(struct _mam_construct_s) + strlen(name) + 1);
+	construct = (struct _mam_construct_s *)
+		calloc(1, sizeof(struct _mam_construct_s) + sz_name + 1);
 	MAM_REFUTE(!construct, MAM_ENOMEM);
 	char *p_name = (char *)construct + sizeof(struct _mam_construct_s);
 	strcpy(p_name, name);
@@ -241,8 +251,12 @@ _mam_context_create_construct(
 	construct->alignment = 1;
 	utarray_new(construct->fields, &_mam_field_icd);
 	utarray_push_back(context->constructs, &construct);
+	HASH_ADD_KEYPTR( hh_name, context->constructs_name_hash,
+		construct->name, sz_name, construct );
 	*construct_ret = construct;
 	return MAM_SUCCESS;
+err_arr:
+	utarray_pop_back(context->constructs);
 err_mem:
 	if (construct->fields)
 		utarray_free(construct->fields);
@@ -712,6 +726,10 @@ err_mem:
 #define utarray_oom() { \
         MAM_RAISE_ERR_GOTO(err, MAM_ENOMEM, err_mem); \
 }
+#undef uthash_nonfatal_oom
+#define uthash_nonfatal_oom(elt) { \
+	MAM_RAISE_ERR_GOTO(err, MAM_ENOMEM, err_arr); \
+}
 mam_error_t
 mam_context_create_variable(
 		mam_context_t     context,
@@ -725,16 +743,20 @@ mam_context_create_variable(
 	MAM_CHECK_PTR(variable_ret);
 	size_t sz_name = strlen(name);
 	MAM_REFUTE(!sz_name, MAM_EINVAL);
+	mam_variable_t variable = NULL;
+	HASH_FIND(hh_name, context->variables_name_hash,
+		name, sz_name, variable);
+	MAM_REFUTE(variable, MAM_EINVAL);
+
 	ssize_t size;
 	size_t align;
 	MAM_VALIDATE(_mam_get_field_type_size_align(
 		context->platform, field_type, &size, &align));
 
 	mam_error_t err = MAM_SUCCESS;
-	mam_variable_t variable = (struct _mam_variable_s *)
+	variable = (struct _mam_variable_s *)
 		calloc(1, sizeof(struct _mam_variable_s) + sz_name + 1);
 	MAM_REFUTE(!variable, MAM_ENOMEM);
-	utarray_push_back(context->variables, &variable);
 	char *p_name = (char *)variable + sizeof(struct _mam_variable_s);
 	strcpy(p_name, name);
 	variable->context = context;
@@ -743,8 +765,13 @@ mam_context_create_variable(
 	variable->size = size;
 	memcpy(&variable->field_type, field_type, sizeof(mam_field_type_t));
 	_mam_freeze_field_type(field_type);
+	utarray_push_back(context->variables, &variable);
+	HASH_ADD_KEYPTR( hh_name, context->variables_name_hash,
+		variable->name, sz_name, variable );
 	*variable_ret = variable;
 	return MAM_SUCCESS;
+err_arr:
+	utarray_pop_back(context->variables);
 err_mem:
 	free(variable);
 	return err;
@@ -827,6 +854,8 @@ mam_error_t
 mam_context_destroy(
 		mam_context_t context) {
 	MAM_CHECK_PTR(context);
+	HASH_CLEAR(hh_name, context->variables_name_hash);
+	HASH_CLEAR(hh_name, context->constructs_name_hash);
 	mam_pointer_t *p_p = NULL;
 	while ((p_p = (mam_pointer_t *)utarray_next(context->pointers, p_p)))
 		MAM_VALIDATE(_mam_pointer_destroy(*p_p));

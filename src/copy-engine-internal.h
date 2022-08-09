@@ -59,6 +59,7 @@ struct _mam_construct_s {
 	UT_array             *fields;
 	_mam_field_t         *fields_name_hash;
 	bool                  frozen;
+	UT_hash_handle        hh_name;
 };
 
 struct _mam_platform_s {
@@ -73,6 +74,7 @@ struct _mam_variable_s {
 	size_t             alignment;
 	ssize_t            size;
 	mam_field_type_t   field_type;
+	UT_hash_handle     hh_name;
 };
 
 static const UT_icd _mam_object_icd = {
@@ -83,13 +85,14 @@ static const UT_icd _mam_object_icd = {
 };
 
 struct _mam_context_s {
-	const char     *name;
-	mam_platform_t  platform;
-	UT_array       *pointers;
-	UT_array       *arrays;
-	UT_array       *constructs;
-	UT_array       *variables;
+	const char      *name;
+	mam_platform_t   platform;
+	UT_array        *pointers;
+	UT_array        *arrays;
+	UT_array        *constructs;
+	UT_array        *variables;
+	mam_variable_t   variables_name_hash;
+	mam_construct_t  constructs_name_hash;
 };
-
 
 #endif //COPY_ENGINE_INTERNAL_H
