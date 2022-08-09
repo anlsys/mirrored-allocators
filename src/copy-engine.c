@@ -212,6 +212,82 @@ err_mem:
 	return err;
 }
 
+mam_error_t
+mam_context_get_variables_number(
+		mam_context_t  context,
+		size_t        *variables_number_ret) {
+	MAM_CHECK_PTR(context);
+	MAM_CHECK_PTR(variables_number_ret);
+	*variables_number_ret = utarray_len(context->variables);
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_context_get_constructs_number(
+		mam_context_t  context,
+		size_t        *constructs_number_ret) {
+	MAM_CHECK_PTR(context);
+	MAM_CHECK_PTR(constructs_number_ret);
+	*constructs_number_ret = utarray_len(context->constructs);
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_context_get_variable(
+		mam_context_t   context,
+		size_t          index,
+		mam_variable_t *variable_ret) {
+	MAM_CHECK_PTR(context);
+	MAM_REFUTE(index >= utarray_len(context->variables), MAM_EINVAL);
+	*variable_ret = *(mam_variable_t *)utarray_eltptr(context->variables, index);
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_context_get_construct(
+		mam_context_t    context,
+		size_t           index,
+		mam_construct_t *construct_ret) {
+	MAM_CHECK_PTR(context);
+	MAM_REFUTE(index >= utarray_len(context->constructs), MAM_EINVAL);
+	*construct_ret = *(mam_construct_t *)utarray_eltptr(context->constructs, index);
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_context_get_variable_by_name(
+		mam_context_t   context,
+		const char *    name,
+		mam_variable_t *variable_ret) {
+	MAM_CHECK_PTR(context);
+	MAM_CHECK_PTR(name);
+	size_t sz_name = strlen(name);
+	MAM_REFUTE(!sz_name, MAM_EINVAL);
+	mam_variable_t variable = NULL;
+	HASH_FIND(hh_name, context->variables_name_hash,
+		name, sz_name, variable);
+	MAM_REFUTE(!variable, MAM_EINVAL);
+	*variable_ret = variable;
+	return MAM_SUCCESS;
+}
+
+mam_error_t
+mam_context_get_construct_by_name(
+		mam_context_t    context,
+		const char *     name,
+		mam_construct_t *construct_ret) {
+	MAM_CHECK_PTR(context);
+	MAM_CHECK_PTR(name);
+	size_t sz_name = strlen(name);
+	MAM_REFUTE(!sz_name, MAM_EINVAL);
+	mam_construct_t construct = NULL;
+	HASH_FIND(hh_name, context->constructs_name_hash,
+		name, sz_name, construct);
+	MAM_REFUTE(!construct, MAM_EINVAL);
+	*construct_ret = construct;
+	return MAM_SUCCESS;
+}
+
 #undef  utarray_oom
 #define utarray_oom() { \
         MAM_RAISE_ERR_GOTO(err, MAM_ENOMEM, err_mem); \
@@ -307,12 +383,12 @@ mam_construct_get_name(
 }
 
 mam_error_t
-mam_construct_get_field_count(
+mam_construct_get_fields_number(
 		mam_construct_t  construct,
-		size_t          *field_count_ret) {
+		size_t          *fields_number_ret) {
 	MAM_CHECK_PTR(construct);
-	MAM_CHECK_PTR(field_count_ret);
-	*field_count_ret = utarray_len(construct->fields);
+	MAM_CHECK_PTR(fields_number_ret);
+	*fields_number_ret = utarray_len(construct->fields);
 	return MAM_SUCCESS;
 }
 

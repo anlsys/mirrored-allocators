@@ -126,6 +126,40 @@ extern mam_error_t
 mam_context_destroy(
 	mam_context_t   context);
 
+extern mam_error_t
+mam_context_get_variables_number(
+	mam_context_t  context,
+	size_t        *variables_number_ret);
+
+extern mam_error_t
+mam_context_get_constructs_number(
+	mam_context_t  context,
+	size_t        *constructs_number_ret);
+
+extern mam_error_t
+mam_context_get_variable(
+	mam_context_t   context,
+	size_t          index,
+	mam_variable_t *variable_ret);
+
+extern mam_error_t
+mam_context_get_construct(
+	mam_context_t    context,
+	size_t           index,
+	mam_construct_t *construct_ret);
+
+extern mam_error_t
+mam_context_get_variable_by_name(
+	mam_context_t   context,
+	const char *    name,
+	mam_variable_t *variable_ret);
+
+extern mam_error_t
+mam_context_get_construct_by_name(
+	mam_context_t    context,
+	const char *     name,
+	mam_construct_t *construct_ret);
+
 enum mam_construct_type_e {
 	MAM_CONSTRUCT_TYPE_STRUCT = 0,
 	MAM_CONSTRUCT_TYPE_UNION,
@@ -169,7 +203,7 @@ mam_construct_get_name(
 	const char      **name_ret);
 
 extern mam_error_t
-mam_construct_get_field_count(
+mam_construct_get_fields_number(
 	mam_construct_t  construct,
 	size_t          *field_count_ret);
 

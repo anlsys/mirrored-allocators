@@ -14,17 +14,22 @@
 void test_define_context() {
 	mam_platform_t   platform;
 	mam_context_t    context;
-	mam_construct_t  my_union, my_struct;
+	mam_construct_t  my_union, my_struct, construct_ret;
 	mam_array_t      my_static_array, my_dynamic_array;
 	mam_pointer_t    my_pointer;
-	mam_variable_t   variable_sz;
+	mam_variable_t   variable_sz, variable_ret;
 	mam_field_type_t field_type;
 	mam_dimension_t  dimension;
+	size_t           number;
 
 	MAM_CHECK(mam_platform_create_host(&platform));
 	assert(platform);
 	MAM_CHECK(mam_context_create("ctx", platform, &context));
 	assert(context);
+	MAM_CHECK(mam_context_get_constructs_number(context, &number));
+	assert(number == 0);
+	MAM_CHECK(mam_context_get_variables_number(context, &number));
+	assert(number == 0);
 
 	field_type.type = MAM_MAPPED_TYPE_DOUBLE;
 	MAM_CHECK(mam_context_create_array(context, &field_type, &my_static_array));
@@ -38,6 +43,13 @@ void test_define_context() {
 
 	MAM_CHECK(mam_context_create_union(context, "my_union_u", false, &my_union));
 	assert(my_union);
+	MAM_CHECK(mam_context_get_constructs_number(context, &number));
+	assert(number == 1);
+	MAM_CHECK(mam_context_get_construct(context, number - 1, &construct_ret));
+	assert(construct_ret == my_union);
+	construct_ret = NULL;
+	MAM_CHECK(mam_context_get_construct_by_name(context, "my_union_u", &construct_ret));
+	assert(construct_ret == my_union);
 	field_type.type = MAM_MAPPED_TYPE_DOUBLE;
 	MAM_CHECK(mam_construct_add_field(my_union, "d", &field_type, MAM_FIELD_OPTION_END));
 	field_type.type = MAM_MAPPED_TYPE_INT;
@@ -45,6 +57,13 @@ void test_define_context() {
 
 	MAM_CHECK(mam_context_create_struct(context, "my_struct_s", false, &my_struct));
 	assert(my_struct);
+	MAM_CHECK(mam_context_get_constructs_number(context, &number));
+	assert(number == 2);
+	MAM_CHECK(mam_context_get_construct(context, number - 1, &construct_ret));
+	assert(construct_ret == my_struct);
+	construct_ret = NULL;
+	MAM_CHECK(mam_context_get_construct_by_name(context, "my_struct_s", &construct_ret));
+	assert(construct_ret == my_struct);
 	field_type.type = MAM_COMPLEX_TYPE_STRUCT;
 	field_type.construct = my_struct;
 	MAM_CHECK(mam_context_create_pointer(context, &field_type, &my_pointer));
@@ -65,6 +84,13 @@ void test_define_context() {
 	field_type.type = MAM_MAPPED_TYPE_SIZE;
 	MAM_CHECK(mam_context_create_variable(context, "sz", &field_type, &variable_sz));
 	assert(variable_sz);
+	MAM_CHECK(mam_context_get_variables_number(context, &number));
+	assert(number == 1);
+	MAM_CHECK(mam_context_get_variable(context, number - 1, &variable_ret));
+	assert(variable_ret == variable_sz);
+	variable_ret = NULL;
+	MAM_CHECK(mam_context_get_variable_by_name(context, "sz", &variable_ret));
+	assert(variable_ret == variable_sz);
 
 	field_type.type = MAM_COMPLEX_TYPE_STRUCT;
 	field_type.construct = my_struct;
@@ -83,7 +109,7 @@ void test_struct() {
 	mam_context_t         context;
 	mam_construct_t       my_struct, my_union;
 	mam_array_t           my_array;
-	size_t                size, align, offset, field_count;
+	size_t                size, align, offset, fields_number;
 	mam_field_type_t      field_type, field_type_r;
 	mam_construct_type_t  construct_type;
 	const char           *name;
@@ -100,8 +126,8 @@ void test_struct() {
 	assert(construct_type == MAM_CONSTRUCT_TYPE_STRUCT);
 	MAM_CHECK(mam_construct_get_name(my_struct, &name));
 	assert(!strcmp(name, "my_struct_s"));
-	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
-	assert(field_count == 0);
+	MAM_CHECK(mam_construct_get_fields_number(my_struct, &fields_number));
+	assert(fields_number == 0);
 	MAM_CHECK(mam_construct_get_size(my_struct, &size));
 	assert(size == 0);
 	MAM_CHECK(mam_construct_get_align(my_struct, &align));
@@ -113,9 +139,9 @@ void test_struct() {
 	assert(size == 2);
 	MAM_CHECK(mam_construct_get_align(my_struct, &align));
 	assert(align == 2);
-	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
-	assert(field_count == 1);
-	MAM_CHECK(mam_construct_get_field(my_struct, field_count - 1, &name, &offset, &size, &field_type_r));
+	MAM_CHECK(mam_construct_get_fields_number(my_struct, &fields_number));
+	assert(fields_number == 1);
+	MAM_CHECK(mam_construct_get_field(my_struct, fields_number - 1, &name, &offset, &size, &field_type_r));
 	assert(!strcmp(name, "h"));
 	assert(offset == 0);
 	assert(size == 2);
@@ -127,9 +153,9 @@ void test_struct() {
 	assert(size == 8);
 	MAM_CHECK(mam_construct_get_align(my_struct, &align));
 	assert(align == 4);
-	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
-	assert(field_count == 2);
-	MAM_CHECK(mam_construct_get_field(my_struct, field_count - 1, &name, &offset, &size, &field_type_r));
+	MAM_CHECK(mam_construct_get_fields_number(my_struct, &fields_number));
+	assert(fields_number == 2);
+	MAM_CHECK(mam_construct_get_field(my_struct, fields_number - 1, &name, &offset, &size, &field_type_r));
 	assert(!strcmp(name, "f"));
 	assert(offset == 4);
 	assert(size == 4);
@@ -148,9 +174,9 @@ void test_struct() {
 	assert(size == 16);
 	MAM_CHECK(mam_construct_get_align(my_struct, &align));
 	assert(align == 8);
-	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
-	assert(field_count == 3);
-	MAM_CHECK(mam_construct_get_field(my_struct, field_count - 1, &name, &offset, &size, &field_type_r));
+	MAM_CHECK(mam_construct_get_fields_number(my_struct, &fields_number));
+	assert(fields_number == 3);
+	MAM_CHECK(mam_construct_get_field(my_struct, fields_number - 1, &name, &offset, &size, &field_type_r));
 	assert(!strcmp(name, "u"));
 	assert(offset == 8);
 	assert(size == 8);
@@ -173,9 +199,9 @@ void test_struct() {
 	assert(size == 200);
 	MAM_CHECK(mam_construct_get_align(my_struct, &align));
 	assert(align == 8);
-	MAM_CHECK(mam_construct_get_field_count(my_struct, &field_count));
-	assert(field_count == 4);
-	MAM_CHECK(mam_construct_get_field(my_struct, field_count - 1, &name, &offset, &size, &field_type_r));
+	MAM_CHECK(mam_construct_get_fields_number(my_struct, &fields_number));
+	assert(fields_number == 4);
+	MAM_CHECK(mam_construct_get_field(my_struct, fields_number - 1, &name, &offset, &size, &field_type_r));
 	assert(!strcmp(name, "a"));
 	assert(offset == 16);
 	assert(size == 180);
